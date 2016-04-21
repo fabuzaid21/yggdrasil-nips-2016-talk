@@ -62,15 +62,11 @@
         <section>
           <h1>
             Yggdrasil:
-            <sub>
-              <a href="https://www.youtube.com/watch?v=undaZKGe578">1</a>,
-              <a href="https://en.wikipedia.org/wiki/Yggdrasil">2</a>
-            </sub>
             Faster Decision Trees using Column Partitioning in Spark
           </h1>
           <table align='center' class='author'>
             <tr>
-              <td>Firas Abuzaid</td>
+              <td style='text-decoration: underline;'>Firas Abuzaid</td>
               <td>Joseph Bradley</td>
             </tr>
             <tr>
@@ -97,13 +93,13 @@
         </section>
 
         <section id='decision-tree' style='text-align: left;'>
-          <h2>A (Brief) Decision Tree Tutorial<sub><a href="http://www.r2d3.us/visual-intro-to-machine-learning-part-1/">3</a></sub></h2>
+          <h2>A (Brief) Decision Tree Tutorial</h2>
           <div style='float: left; width: 30%;'>
             <p>
             Suppose you're trying to predict whether a house is located in
             <span class='emph italic tree-green'>San Francisco</span> or
             <span class='emph italic tree-blue'>New York</span>
-            based on the following features:
+            based on:
             <ul>
               <li>price</li>
               <li>sq ft</li>
@@ -140,7 +136,7 @@
             <div style='float: left; width: 49%;'>
               <ul>
                 <li>Partition training set <span class='emph italic'>by row</span></li>
-                <li class='fragment'>Each worker computes sufficient statistics on subset of training data</li>
+                <li class='fragment'>Workers compute sufficient stats on subsets of training data</li>
                 <li class='fragment'>Since data partitioned by row, workers must compute statistics <span class='emph italic'>for all features</span></li>
                 <li class='fragment'><span class='highlight'>Communication cost:</span> $O(2^DkpB)$</li>
               </ul>
@@ -170,10 +166,10 @@
                 <li>To limit communication, workers only consider $B$ thresholds, instead of $n-1$</li>
                 <li>Optimal split may not always be found!</li>
                 <li class='fragment'><span class='highlight'>Key takeaway:</span>
-                <span class='incorrect'><br/>Partitioning by row
+                <span class='incorrect'><br/>When partitioning by row
                   <ol>
-                    <li>introduces a tradeoff between accuracy and runtime efficiency</li>
-                    <li>asks the user to tune an additional hyperparameter $B$</li>
+                    <li>tradeoff between accuracy and runtime efficiency</li>
+                    <li>user must tune an additional hyperparameter $B$</li>
                   </ol>
                 </span>
                 </li>
@@ -204,9 +200,8 @@
             <div style='float: left; width: 50%;'>
               <ul>
                 <li class='fragment'>
-                  Each worker computes sufficient statistics on all of its
+                  Workers compute sufficient stats on all of its
                   <span class='emph italic'>local features</span>
-                  and sends the best feature to the master
                 </li>
                 <li class='fragment correct'>No $B$ parameter; all thresholds considered</li>
                 <li class='fragment'><span class='highlight'>Communication cost:</span> $O(2^Dk + Dnk)$</li>
