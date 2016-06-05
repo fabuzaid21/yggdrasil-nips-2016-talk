@@ -136,9 +136,9 @@
             <div style='float: left; width: 49%;'>
               <ul>
                 <li>Partition training set <span class='emph italic'>by row</span></li>
-                <li class='fragment'>Workers compute sufficient stats on subsets of training data</li>
-                <li class='fragment'>Since data partitioned by row, workers must compute statistics <span class='emph italic'>for all features</span></li>
-                <li class='fragment'><span class='highlight'>Communication cost:</span> $O(2^DkpB)$</li>
+                <li class='vertical-padding fragment'>Workers compute partial sufficient stats <span class='emph italic'>for all features</span></li>
+                <li class='vertical-padding fragment'>Master aggregates stats to find best split</li>
+                <li class='vertical-padding fragment'><span class='highlight'>Communication cost:</span> $O(2^DkpB)$</li>
               </ul>
             </div>
             <div style='float: right; width: 49%'>
@@ -163,9 +163,9 @@
           <div>
             <div style='float: left; width: 49%;'>
               <ul>
-                <li>To limit communication, workers only consider $B$ thresholds, instead of $n-1$</li>
-                <li>Optimal split may not always be found!</li>
-                <li class='fragment'><span class='highlight'>Key takeaway:</span>
+                <li class='vertical-padding'>To limit communication, workers only consider $B$ thresholds, instead of $n-1$</li>
+                <li class='vertical-padding'>Optimal split may not always be found!</li>
+                <li class='fragment vertical-padding'><span class='highlight'>Key takeaway:</span>
                 <span class='incorrect'><br/>When partitioning by row
                   <ol>
                     <li>tradeoff between accuracy and runtime efficiency</li>
@@ -199,12 +199,12 @@
           <div>
             <div style='float: left; width: 50%;'>
               <ul>
-                <li class='fragment'>
+                <li class='fragment vertical-padding'>
                   Workers compute sufficient stats on all of its
                   <span class='emph italic'>local features</span>
                 </li>
-                <li class='fragment correct'>No $B$ parameter; all thresholds considered</li>
-                <li class='fragment'><span class='highlight'>Communication cost:</span> $O(2^Dk + Dnk)$</li>
+                <li class='fragment vertical-padding correct'>No $B$ parameter; all thresholds considered</li>
+                <li class='fragment vertical-padding'><span class='highlight'>Communication cost:</span> $O(2^Dk + Dnk)$</li>
               </ul>
             </div>
             <div style='float: right; width: 50%'>
@@ -228,10 +228,10 @@
               <li class='fragment vertical-padding'>Partition features across workers</li>
               <li class='fragment vertical-padding'>Workers sort each feature by value</li>
               <li class='fragment vertical-padding'>Compute best split for each feature</li>
-              <li class='fragment vertical-padding'>Pick best split for each worker, send split + bit vector to master</li>
-              <li class='fragment vertical-padding'>Master selects best global split among the candidates</li>
-              <li class='fragment vertical-padding'>Master sends bit vector for best global split to each worker</li>
-              <li class='fragment vertical-padding'>Worker sorts each feature by bit vector, then value</li>
+              <li class='fragment vertical-padding'>Pick best split for each worker &amp; send to master</li>
+              <li class='fragment vertical-padding'>Master selects best global split among the candidates, requests bit vector from worker</li>
+              <li class='fragment vertical-padding'>Master broadcasts bit vector for best global split to all workers</li>
+              <li class='fragment vertical-padding'>Workers re-partition their features into sorted sub-arrays</li>
             </ol>
           </div>
           <div style ='float: right; width: 75%;' id='yggdrasil-algo'></div>

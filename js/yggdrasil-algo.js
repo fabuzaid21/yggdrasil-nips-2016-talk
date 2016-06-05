@@ -471,6 +471,7 @@ var YggdrasilAlgo = Backbone.View.extend({
     var splits = [];
     var bestFeatures = [];
     var bv = null;
+    var broadcast = true;
     switch (this.state) {
       case 0:
         this.workerAssignments = this.allOnMaster();
@@ -490,9 +491,12 @@ var YggdrasilAlgo = Backbone.View.extend({
         splits = this.computeSplits(featureData);
         bestFeatures = this.bestSplitPerWorker(splits, this.workerAssignments);
         break;
-      case 6:
-        bv = this.getBitVectorForDepth(depth);
       case 5:
+        // can't fit all the bits, so just sample 50 of them
+        this.bv = _.sample(this.getBitVectorForDepth(depth), 50).join('');
+        broadcast = false;
+      case 6:
+        bv = this.bv;
         featureData = this.sortFeatureOnWorker(_.range(NUM_SAMPLES).map(function() { return 0; }));
         splits = this.computeSplits(featureData);
         bestFeatures = ['elevation']; // hard code it for now
@@ -502,15 +506,16 @@ var YggdrasilAlgo = Backbone.View.extend({
         depth = 1;
         break;
     }
+    debugger;
     this.render(featureData, this.workerAssignments, depth,
         _.map(splits, function(d) { return d.index; }), bestFeatures,
-        bv);
+        bv, broadcast);
   },
 
   /**
    * Called by render to update display after updating state machine
    **/
-  render: function(featureData, partitions, depth, splits, bestFeaturePerWorker, bitVector) {
+  render: function(featureData, partitions, depth, splits, bestFeaturePerWorker, bitVector, broadcast) {
     var v = this;
     var positionFeature = function(d, i) {
       var locInfo = partitions[i];
@@ -518,13 +523,37 @@ var YggdrasilAlgo = Backbone.View.extend({
       return 'translate(' + nodeCoords.x + ', ' +  (nodeCoords.y + 1.5*NODE_RADIUS + locInfo.index*FEATURE_OFFSET) + ')';
     };
 
+    this.svg.selectAll('text.bit-vector').remove();
     if (bitVector) {
       var masterCoords = v.getNodeCoordinates(0);
-      for (var i = 0; i < K; ++i) {
-        var workerCoords = v.getNodeCoordinates(i + 1);
+      if (broadcast) {
+        // send bitvector to all workers
+        for (var i = 0; i < K; ++i) {
+          var workerCoords = v.getNodeCoordinates(i + 1);
+          this.svg.append('text')
+            .text(bitVector)
+            .classed('bit-vector', true)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '0.40em')
+            // these next two lines squish the characters so that
+            // they fit in only 200px
+            .attr('textLength', 200)
+            .attr('lengthAdjust', 'spacingAndGlyphs')
+            .attr('x', masterCoords.x)
+            .attr('y', masterCoords.y + NODE_RADIUS / 2)
+            // move bitvector from master to worker
+            .transition()
+            .attr('x', workerCoords.x)
+            .attr('y', workerCoords.y + NODE_RADIUS / 2)
+            .ease('bounce')
+            .duration(1000);
+        }
+      } else {
+        var nodeIndex = partitions[FEATURES.indexOf(bestFeaturePerWorker[0])].node;
+        var workerCoords = v.getNodeCoordinates(nodeIndex);
+        // send bitvector from worker to master
         this.svg.append('text')
-          // can't fit all the bits, so just sample 50 of them
-          .text(_.sample(bitVector, 50).join(''))
+          .text(bitVector)
           .classed('bit-vector', true)
           .attr('text-anchor', 'middle')
           .style('font-size', '0.40em')
@@ -532,17 +561,15 @@ var YggdrasilAlgo = Backbone.View.extend({
           // they fit in only 200px
           .attr('textLength', 200)
           .attr('lengthAdjust', 'spacingAndGlyphs')
-          .attr('x', masterCoords.x)
-          .attr('y', masterCoords.y + NODE_RADIUS / 2)
-          // move bitvector from master to worker
-          .transition()
           .attr('x', workerCoords.x)
           .attr('y', workerCoords.y + NODE_RADIUS / 2)
+          // move bitvector from master to worker
+          .transition()
+          .attr('x', masterCoords.x)
+          .attr('y', masterCoords.y + NODE_RADIUS / 2)
           .ease('bounce')
           .duration(1000);
       }
-    } else {
-      this.svg.selectAll('text.bit-vector').remove();
     }
 
     var features = this.svg.selectAll('g.feature').data(featureData);
